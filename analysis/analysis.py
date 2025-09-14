@@ -19,7 +19,7 @@ from dataset.utility import ranges
 
 from src.metrics import torch_metrics
 
-MAX_LEN_DICT = {"ood": {19: 100}, "misc": {19: 200}}
+MAX_LEN_DICT = {"ood": {19: 100}, "ooddor": {19: 100}, "oodddr": {19: 100}, "oodidr": {19: 100}, "misc": {19: 200}}
 
 
 class JudgementDay():
@@ -45,7 +45,7 @@ class JudgementDay():
 		self.prec = 2
 		self.device = "cuda"
 
-		if self.mode == "ood":
+		if "ood" in self.mode:
 			self.base_af_dir = f"./AF_preds_v{self.data_version}/"
 			self.diso_base_dir = f"./Predictions_{self.mode}_v_{self.data_version}/"
 			# OOD set target contact maps file.
@@ -216,7 +216,7 @@ class JudgementDay():
 			
 			# For all entries.
 			entry_ids = []
-			for idx, entry_id in enumerate( self.target_cmap.keys() ):
+			for idx, entry_id in enumerate( self.disobind_preds.keys() ):
 				target = np.array( self.target_cmap[entry_id] )
 				target = self.prepare_target( target, task )
 
@@ -250,8 +250,9 @@ class JudgementDay():
 						ood_dict[ood_key].append( self.disobind_preds[entry_id][task][ood_key] )
 
 					elif ood_key in ["Aiupred", "Morfchibi", "Deepdisobind"]:
-						if task == "interface_1" and self.mode == "ood":
-							ood_dict[ood_key].append( self.other_methods[ood_key.lower()][f"{u1}--{u2}_{c}"] )
+						if "interface" in task and self.mode == "ood":
+							method = self.other_methods[ood_key.lower()]
+							ood_dict[ood_key].append( method[f"{u1}--{u2}_{c}"][task] )
 						# Empty arrays for all other tasks.
 						else:
 							dummy = self.disobind_preds[entry_id][task]["Disobind"]
@@ -469,7 +470,7 @@ class JudgementDay():
 				preds_dict.update( interaction_types_dict )
 
 
-			if task == "interface_1":
+			if "interface" in task:
 				if self.mode == "ood":
 					other_methods_dict = self.get_other_method_preds( ood_dict = ood_dict )
 					preds_dict.update( other_methods_dict )

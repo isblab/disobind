@@ -5,6 +5,9 @@ import os,json
 from typing import Dict
 import numpy as np
 from Bio import SeqIO
+
+import torch
+from torch import nn
 import aiupred_lib
 
 
@@ -211,6 +214,18 @@ class Othermethods():
 		return pad_mask
 
 
+	def coarse_grain_interface( self, pred: np.array, cg: int ) -> torch.Tensor:
+		# [1, 1, L]
+		if cg > 1:
+			pred = torch.from_numpy( pred ).unsqueeze( 0 ).unsqueeze( 1 )
+			m = nn.MaxPool1d( kernel_size = cg, stride = cg )
+			cg_pred = m( pred )
+			cg_pred = cg_pred.squeeze( [0, 1] ).numpy()
+			return cg_pred
+		else:
+			return pred
+
+
 	def assemble_interfaces_for_ood_entries( self, aiupred_preds: Dict, deepdiso_preds: Dict,
 											morfchibi_preds: Dict ):
 		"""
@@ -230,36 +245,50 @@ class Othermethods():
 				deepdiso_seq_id = "_".join( seq_id.split( ":" ) )
 				# For homomeric entry.
 				if len( aiupred_preds[ood_entry_id] ) == 1:
-					aiupred_p1 = self.pad_to_max_len( aiupred_preds[ood_entry_id][seq_id] )
-					aiupred_p2 = self.pad_to_max_len( aiupred_preds[ood_entry_id][seq_id] )
+					aiupred_p1_ = self.pad_to_max_len( aiupred_preds[ood_entry_id][seq_id] )
+					aiupred_p2_ = self.pad_to_max_len( aiupred_preds[ood_entry_id][seq_id] )
 
-					deepdiso_p1 = self.pad_to_max_len( deepdiso_preds[ood_entry_id][seq_id] )
-					deepdiso_p2 = self.pad_to_max_len( deepdiso_preds[ood_entry_id][seq_id] )
+					deepdiso_p1_ = self.pad_to_max_len( deepdiso_preds[ood_entry_id][seq_id] )
+					deepdiso_p2_ = self.pad_to_max_len( deepdiso_preds[ood_entry_id][seq_id] )
 
-					morfchibi_p1 = self.pad_to_max_len( morfchibi_preds[ood_entry_id][seq_id] )
-					morfchibi_p2 = self.pad_to_max_len( morfchibi_preds[ood_entry_id][seq_id] )
+					morfchibi_p1_ = self.pad_to_max_len( morfchibi_preds[ood_entry_id][seq_id] )
+					morfchibi_p2_ = self.pad_to_max_len( morfchibi_preds[ood_entry_id][seq_id] )
 				# Heteromeric entries.
 				else:
 					if seq_uni_id == ood_uni_id1:
-						aiupred_p1 = self.pad_to_max_len( aiupred_preds[ood_entry_id][seq_id] )
-						deepdiso_p1 = self.pad_to_max_len( deepdiso_preds[ood_entry_id][seq_id] )
-						morfchibi_p1 = self.pad_to_max_len( morfchibi_preds[ood_entry_id][seq_id] )
+						aiupred_p1_ = self.pad_to_max_len( aiupred_preds[ood_entry_id][seq_id] )
+						deepdiso_p1_ = self.pad_to_max_len( deepdiso_preds[ood_entry_id][seq_id] )
+						morfchibi_p1_ = self.pad_to_max_len( morfchibi_preds[ood_entry_id][seq_id] )
 
 					elif seq_uni_id == ood_uni_id2:
-						aiupred_p2 = self.pad_to_max_len( aiupred_preds[ood_entry_id][seq_id] )
-						deepdiso_p2 = self.pad_to_max_len( deepdiso_preds[ood_entry_id][seq_id] )
-						morfchibi_p2 = self.pad_to_max_len( morfchibi_preds[ood_entry_id][seq_id] )
+						aiupred_p2_ = self.pad_to_max_len( aiupred_preds[ood_entry_id][seq_id] )
+						deepdiso_p2_ = self.pad_to_max_len( deepdiso_preds[ood_entry_id][seq_id] )
+						morfchibi_p2_ = self.pad_to_max_len( morfchibi_preds[ood_entry_id][seq_id] )
 
 					else:
 						raise ValueError( f"Uniprot ID from AIUPred/DeepDisoBind does not match OOD Uniprot ID..." )
 
-			aiupred_interface = np.hstack( [aiupred_p1, aiupred_p2] ).reshape( -1, 1 )
-			deepdiso_interface = np.hstack( [deepdiso_p1, deepdiso_p2] ).reshape( -1, 1 )
-			morfchibi_interface = np.hstack( [morfchibi_p1, morfchibi_p2] ).reshape( -1, 1 )
+				self.predictions["aiupred"][ood_entry_id] = {f"interface_{k}": None for k in [1, 5, 10]}
+				self.predictions["deepdisobind"][ood_entry_id] = {}
+				self.predictions["morfchibi"][ood_entry_id] = {}
 
-			self.predictions["aiupred"][ood_entry_id] = aiupred_interface
-			self.predictions["deepdisobind"][ood_entry_id] = deepdiso_interface
-			self.predictions["morfchibi"][ood_entry_id] = morfchibi_interface
+				for cg in [1, 5, 10]:
+					aiupred_p1 = self.coarse_grain_interface( aiupred_p1_, cg = cg )
+					aiupred_p2 = self.coarse_grain_interface( aiupred_p2_, cg = cg )
+
+					deepdiso_p1 = self.coarse_grain_interface( deepdiso_p1_, cg = cg )
+					deepdiso_p2 = self.coarse_grain_interface( deepdiso_p2_, cg = cg )
+
+					morfchibi_p1 = self.coarse_grain_interface( morfchibi_p1_, cg = cg )
+					morfchibi_p2 = self.coarse_grain_interface( morfchibi_p2_, cg = cg )
+
+					aiupred_interface = np.hstack( [aiupred_p1, aiupred_p2] ).reshape( -1, 1 )
+					deepdiso_interface = np.hstack( [deepdiso_p1, deepdiso_p2] ).reshape( -1, 1 )
+					morfchibi_interface = np.hstack( [morfchibi_p1, morfchibi_p2] ).reshape( -1, 1 )
+
+					self.predictions["aiupred"][ood_entry_id][f"interface_{cg}"] = aiupred_interface
+					self.predictions["deepdisobind"][ood_entry_id][f"interface_{cg}"] = deepdiso_interface
+					self.predictions["morfchibi"][ood_entry_id][f"interface_{cg}"] = morfchibi_interface
 
 
 if __name__ == "__main__":
