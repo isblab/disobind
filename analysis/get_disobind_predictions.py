@@ -33,7 +33,7 @@ from src.utils import prepare_input
 from params import parameter_files
 
 
-MAX_LEN_DICT = {"ood": {19: 100}, "misc": {19: 200}}
+MAX_LEN_DICT = {"ood": {19: 100}, "ooddor": {19: 100}, "oodddr": {19: 100}, "oodidr": {19: 100}, "misc": {19: 200}}
 
 class Prediction():
 	def __init__( self ):
@@ -82,8 +82,8 @@ class Prediction():
 
 		# self.output_dir = f"Predictions_{self.mod}_{self.mod_ver}"
 		# Name for output directory.
-		if self.mode == "ood":
-			self.output_dir = f"Predictions_ood_v_{self.data_version}"
+		if "ood" in self.mode:
+			self.output_dir = f"Predictions_{self.mode}_v_{self.data_version}"
 			# Filename to store predictions.
 			self.output_filename = "Disobind_Predictions.npy"
 			# Input file containing the prot1/2 headers.
