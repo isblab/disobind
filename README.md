@@ -9,12 +9,12 @@ Disobind is a deep learning method for predicting inter-protein contact maps and
 * Data is deposited in [Zenodo](https://www.doi.org/10.5281/zenodo.14504762)
 
 ## Colab Notebook
-A Google Colab notebook for running Disobind+ColabFold is avalable [here](https://colab.research.google.com/drive/13EOqRV9sMwDLm0EEsFirFlXDHquSK4hF?usp=sharing).
+A Google Colab notebook for running Disobind+ColabFold is available [here](https://colab.research.google.com/drive/13EOqRV9sMwDLm0EEsFirFlXDHquSK4hF?usp=sharing).
 
 ## Installation 
 
 ### Dependencies
-* See `requirements.txt` for Python dependencies
+* See `requirements.txt` for Python dependencies.
 
 ### Steps for installation 
 
@@ -43,7 +43,6 @@ For using GPUs, ensure CUDA-toolkit (version 11.8) and the NVIDIA drivers are in
 1. Disobind can only be used for binary complexes (AB). However, for non-binary complexes (ABC) the user can convert them into binary pairs (AB, BC, AC) to run Disobind.  
 2. The input protein pair is assumed to be interacting and Disobind predicts where they interact (contact maps and interface residues).  
 3. Protein 1 must be an IDR whereas Protein 2 may or may not be an IDR.  
-
 
 ### Prediction
 The input is a CSV file.
@@ -128,4 +127,3 @@ __Testable:__ Yes
 __Parallelizeable:__ Yes
 
 __Publications:__  Majila K., Ullanat V., Viswanath S. A deep learning method for predicting interactions for intrinsically disordered regions of proteins. bioRxiv  (2024), [DOI](https://www.biorxiv.org/content/10.1101/2024.12.19.629373v5).
-
