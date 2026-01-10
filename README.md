@@ -99,15 +99,14 @@ The output CSV file contains the following four columns:
 | X1      |  14      | X2       | 44        |
 | X1      |  125     | X2       | 80        |
 
-For contact map prediction, this must be interpreted as, residue 10 in protein X1 interacts with residue 40 in protein X2 and so on.
+For __contact map__ prediction, this must be interpreted as, residue 10 in protein X1 interacts with residue 40 in protein X2 and so on.
 
-For interface residue prediction, this must be interpreted as, residues 10, 14, and 125 in protein X1 may interact with one or more of the residues 40, 44, and 80 in protein X2.
+For __interface__ residue prediction, this must be interpreted as, residues 10, 14, and 125 in protein X1 may interact with one or more of the residues 40, 44, and 80 in protein X2.
 
 ## Instructions for reproducing/re-training Disobind
 
 ### Dataset creation
 Follow the steps as specified in [dataset](./dataset/README.md).  
-
 
 ### Model training
 Follow the steps as specified in [src](./src/README.md).  
@@ -118,7 +117,7 @@ Follow the steps as specified in [analysis](./analysis/README.md).
 ## Information
 __Author(s):__ Kartik Majila, Varun Ullanat, Shruthi Viswanath
 
-__Date__: December , 2024
+__Date__: Jan 10, 2026
 
 __License:__ [CC BY-SA 4.0](https://creativecommons.org/licenses/by-sa/4.0/)
 This work is licensed under the Creative Commons Attribution-ShareAlike 4.0
