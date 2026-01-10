@@ -52,14 +52,14 @@ Each row corresponds to one sequence fragment pair for which the Disobind predic
 Each row contains the UniProt ID, start, and end UniProt residue positions for each of the two protein sequence fragments.  
 
 To run a Disobind prediction only, provide the input as:  
-`UniProt_ID1,start1,end1,UniProt_ID2,start2,end2`.
+`UniProt_ID1, start1, end1, UniProt_ID2, start2, end2`.
 
 To run a Disobind+AF2 prediction, provide the input as:  
-`UniProt_ID1,start1,end1,UniProt_ID2,start2,end2,AF2_struct_file_path,AF2_pae_file_path,chain1,chain2,offset1,offset2`.
+`UniProt_ID1, start1, end1, UniProt_ID2, start2, end2, AF2_struct_file_path, AF2_pae_file_path, chain1, chain2, offset1, offset2`.
 
-Chain1,Chain2 represent the Chain IDs that correspond to the protein1/2 sequence fragment.
-Offset is an integer value that indicates the difference in the residue positions in the AF2 structure and UniProt position.  
-Offset = 0 if the AF2 structure corresponds to the full UniProt sequnce or just the sequence fragment.
+`Chain1, Chain2` represent the Chain IDs that correspond to the protein1/2 sequence fragment.
+`Offset1, Offset2` are integer values that indicate the difference in the residue positions between the AF2 structure and UniProt position.  
+Set the offsets to 0 if the AF2 structure corresponds to the full UniProt sequence or just the sequence fragment.
 
 As an example see `example/test.csv`.  
 
@@ -80,7 +80,6 @@ By default, Disobind provides interface predictions at a coarse-grained (CG) res
 | -d     | device to be used - cpu/cuda (default: `cpu`).                                                                            |
 | -cm    | whether to predict inter-protein contact maps (default: `False`). By default, only interface residues are predicted.      |
 | -cg    | coarse-grained resolution - 0, 1, 5, 10 (default: `1`). If `0`, predictions at all resolutions (1,5 and 10) are provided. |
-
 
 This script outputs the following files:  
 
