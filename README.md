@@ -12,7 +12,7 @@ Disobind is a deep learning method for predicting inter-protein contact maps and
 
 
 ### Colab Notebook
-We are working on providing a Colab notebook for Disobind.
+A colab notebook for running Disobind+ColabFold is avalable [here](https://colab.research.google.com/drive/13EOqRV9sMwDLm0EEsFirFlXDHquSK4hF?usp=sharing).
 
 
 ## Dependencies:
