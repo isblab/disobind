@@ -2,27 +2,24 @@
 # Disobind
 Disobind is a deep learning method for predicting inter-protein contact maps and interface residues for an IDR and its binding partner from their sequences. 
 
-
 ![main_fig](main.png)
-
 
 ## Publication and Data
 * Kartik Majila, Varun Ullanat, Shruthi Viswanath. **A deep learning method for predicting interactions for intrinsically disordered regions of proteins.** bioRxiv, [DOI](https://www.biorxiv.org/content/10.1101/2024.12.19.629373v5).
 * Data is deposited in [Zenodo](https://www.doi.org/10.5281/zenodo.14504762)
 
+## Colab Notebook
+A Google Colab notebook for running Disobind+ColabFold is avalable [here](https://colab.research.google.com/drive/13EOqRV9sMwDLm0EEsFirFlXDHquSK4hF?usp=sharing).
 
-### Colab Notebook
-A colab notebook for running Disobind+ColabFold is avalable [here](https://colab.research.google.com/drive/13EOqRV9sMwDLm0EEsFirFlXDHquSK4hF?usp=sharing).
+## Installation 
 
-
-## Dependencies:
+### Dependencies
 * See `requirements.txt` for Python dependencies
 
+### Steps for installation 
 
-## Installation
 1. Install Conda  
 If not already installed, install Conda as specified here: https://docs.conda.io/projects/conda/en/latest/index.html.
-
 
 2. Clone the repository
 ```
@@ -40,15 +37,15 @@ chmod +x install.sh
 
 For using GPUs, ensure CUDA-toolkit (version 11.8) and the NVIDIA drivers are installed on the system.
 
+## Running Disobind + AF2  
 
-## Input requirements
+### Input requirements
 1. Disobind can only be used for binary complexes (AB). However, for non-binary complexes (ABC) the user can convert them into binary pairs (AB, BC, AC) to run Disobind.  
-2. The input protein pair is assumed to be interacting and Disobind tells where do they interact (contact maps and interface residues).  
-3. The input protein must be <= 100 residues in length. For longer proteins, the user can truncate the protein and run Disobind.  
-4. Protein 1 must be an IDR whereas Protein 2 may or may not be an IDR.  
+2. The input protein pair is assumed to be interacting and Disobind predicts where they interact (contact maps and interface residues).  
+3. Protein 1 must be an IDR whereas Protein 2 may or may not be an IDR.  
 
 
-## Prediction
+### Prediction
 The input is a CSV file.
 
 Each row corresponds to one sequence fragment pair for which the Disobind prediction is required. 
@@ -75,7 +72,7 @@ python run_disobind.py -f ./example/test.csv
 
 By default, Disobind provides interface predictions at a coarse-grained (CG) resolution 1.  
 
-### Other options
+#### Other options
 | Flags  |                                     Description                                                                           |
 | ------ | --------------------------------------------------------------------------------------------------------------------------|
 | -f     | path to the input csv file.                                                                                               |
@@ -88,23 +85,36 @@ By default, Disobind provides interface predictions at a coarse-grained (CG) res
 
 This script outputs the following files:  
 
-* A CSV output file for all predictions for all input sequence fragment pairs.
+* A CSV output file for all predictions for all input sequence fragment pairs. See the Colab notebook for description of the output CSV. 
 
 * `Predictions.npy`: contains predictions for all input sequence fragment pairs in a nested dictionary.
 
+### Description of the output
 
-## Dataset creation
+The output CSV file contains the following four columns:
+
+| Protein1 | Residue1 | Protein2 | Residue2 |
+|:-------:|:--------:|:--------:|:---------:|
+| X1      |  10      | X2       | 40        |
+| X1      |  14      | X2       | 44        |
+| X1      |  125     | X2       | 80        |
+
+For contact map prediction, this must be interpreted as, residue 10 in protein X1 interacts with residue 40 in protein X2 and so on.
+
+For interface residue prediction, this must be interpreted as, residues 10, 14, and 125 in protein X1 may interact with one or more of the residues 40, 44, and 80 in protein X2.
+
+## Instructions for reproducing/re-training Disobind
+
+### Dataset creation
 Follow the steps as specified in [dataset](./dataset/README.md).  
 
 
-## Model training
+### Model training
 Follow the steps as specified in [src](./src/README.md).  
 
-
-## Analysis
+### Analysis of the model outputs
 Follow the steps as specified in [analysis](./analysis/README.md).  
    
-
 ## Information
 __Author(s):__ Kartik Majila, Varun Ullanat, Shruthi Viswanath
 
