@@ -5,7 +5,7 @@ Disobind is a deep learning method for predicting inter-protein contact maps and
 ![main_fig](main.png)
 
 ## Publication and Data
-* Kartik Majila, Varun Ullanat, Shruthi Viswanath. **A deep learning method for predicting interactions for intrinsically disordered regions of proteins.** bioRxiv, [DOI](https://www.biorxiv.org/content/10.1101/2024.12.19.629373v5).
+* Kartik Majila, Varun Ullanat, Shruthi Viswanath. **A deep learning method for predicting interactions for intrinsically disordered regions of proteins.** bioRxiv, [DOI]([https://www.biorxiv.org/content/10.1101/2024.12.19.629373v5](https://doi.org/10.1016/j.cels.2025.101486)).
 * Data is deposited in [Zenodo](https://www.doi.org/10.5281/zenodo.14504762)
 
 ## Colab Notebook
