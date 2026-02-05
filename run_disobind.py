@@ -142,7 +142,7 @@ class Disobind():
 								"Choose from [0, 1, 5, 10]..." )
 
 		if self.required_cg in [5, 10]:
-			warnings.warn( f"\n\033[1m Using coarse-grained model with kernel size = {cg}.\033[0m\n"+
+			warnings.warn( f"\n\033[1m Using coarse-grained model with kernel size = {self.required_cg}.\033[0m\n"+
 							f"\033[1m C-terminal residues would be lost if protein length\033[0m"+
 							"\033[1m is not a multiple of kernel size...\n\033[0m" )
 
