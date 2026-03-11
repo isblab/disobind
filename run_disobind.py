@@ -782,7 +782,7 @@ class Disobind():
 		p1_cg_len, beads1, p2_cg_len, beads2 = self.get_beads( cg, prot1, prot2 )
 		
 		if "interaction" in obj:
-			output = output[:len_p1, :len_p2]
+			output = output[:p1_cg_len, :p2_cg_len]
 			idx = np.where( output >= self.threshold )
 			df = pd.DataFrame()
 			if len( idx[0] ) != 0:
