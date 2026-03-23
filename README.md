@@ -117,12 +117,12 @@ __Author(s):__ Kartik Majila, Varun Ullanat, Shruthi Viswanath
 
 __Date__: Jan 10, 2026
 
-__License:__ [CC BY-SA 4.0](https://creativecommons.org/licenses/by-sa/4.0/)
-This work is licensed under the Creative Commons Attribution-ShareAlike 4.0
-International License.
+__License:__ GPL v3
+This work is licensed under the terms of the GNU General Public License,
+ Version 3, as published by the Free Software Foundation on 29 June 2007.
 
 __Testable:__ Yes
 
 __Parallelizeable:__ Yes
 
-__Publications:__  Majila K., Ullanat V., Viswanath S. A deep learning method for predicting interactions for intrinsically disordered regions of proteins. bioRxiv  (2024), [DOI](https://www.biorxiv.org/content/10.1101/2024.12.19.629373v5).
+__Publications:__  Majila K., Ullanat V., Viswanath S. Disobind: A sequence-based, partner-dependent contact map and interface residue predictor for intrinsically disordered regions. CellSystems  (2026), [DOI](https://doi.org/10.1016/j.cels.2025.101486).
