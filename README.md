@@ -45,10 +45,12 @@ For using GPUs, ensure CUDA-toolkit (version 11.8) and the NVIDIA drivers are in
 3. Protein 1 must be an IDR whereas Protein 2 may or may not be an IDR.  
 
 ### Prediction
-The input is a CSV file.
+The input to Disobind can be provided as a csv (preferred) or fasta file format.  
+The csv file format allows providing multiple protein pairs as input for obtaining predictions, but expects that the proteins have a UniProt accession.  
+For proteins that do not have a UniProt accession, one can use the fasta file format to provide the sequence as input for prediction.  
 
+#### CSV format
 Each row corresponds to one sequence fragment pair for which the Disobind prediction is required. 
-
 Each row contains the UniProt ID, start, and end UniProt residue positions for each of the two protein sequence fragments.  
 
 To run a Disobind prediction only, provide the input as:  
@@ -61,12 +63,20 @@ To run a Disobind+AF2 prediction, provide the input as:
 `Offset1, Offset2` are integer values that indicate the difference in the residue positions between the AF2 structure and UniProt position.  
 Set the offsets to 0 if the AF2 structure corresponds to the full UniProt sequence or just the sequence fragment.
 
+#### FASTA format
+```
+>UniProt_ID1, start1, end1, AF2_struct_file_path, AF2_pae_file_path, chain1, offset1
+Protein 1 Sequence
+>UniProt_ID2, start2, end2, AF2_struct_file_path, AF2_pae_file_path, chain2, offset2
+Protein 2 Sequence
+```
+
 As an example see `example/test.csv`.  
 
 Run the following command to use Disobind for the example case with default settings:
 
 ```
-python run_disobind.py -f ./example/test.csv 
+python run_disobind.py -i csv -f ./example/test.csv 
 ```
 
 By default, Disobind provides interface predictions at a coarse-grained (CG) resolution 1.  
@@ -74,7 +84,8 @@ By default, Disobind provides interface predictions at a coarse-grained (CG) res
 #### Other options
 | Flags  |                                     Description                                                                           |
 | ------ | --------------------------------------------------------------------------------------------------------------------------|
-| -f     | path to the input csv file.                                                                                               |
+| -i     | input file type (csv or fasta).                                                                                           |
+| -f     | path to the input file.                                                                                                   |
 | -c     | no. of cores to be used for downloading the UniProt sequences (default = 2).                                              |
 | -o     | output directory name (default: `output`).                                                                                |
 | -d     | device to be used - cpu/cuda (default: `cpu`).                                                                            |
