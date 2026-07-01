@@ -23,6 +23,7 @@ from omegaconf import OmegaConf
 from multiprocessing import Pool
 import tqdm
 import Bio
+from Bio import SeqIO
 from Bio.PDB import PDBParser, MMCIFParser
 
 
@@ -48,6 +49,8 @@ class Disobind():
 		"""
 		# Input file containing the prot1/2 entry_ids.
 		self.input_file = args.f
+		# Input file type - fasta/csv.
+		self.input_type = args.i
 		# No. of CPU cores for parallelism.
 		self.cores = args.c
 		# Predict cmaps.
@@ -113,7 +116,8 @@ class Disobind():
 			For predict mode,
 				Download the sequences.
 		"""
-		entry_ids, af_dict = self.read_csv_input()
+		# entry_ids, af_dict = self.read_csv_input()
+		entry_ids, af_dict = self.process_input_file()
 
 		prot_pairs = self.process_input_pairs( entry_ids )
 
@@ -205,7 +209,107 @@ class Disobind():
 ###################################################################################
 ##-------------------------------------------------------------------------------##
 ###################################################################################
-	def read_csv_input( self ):
+	def process_input_file( self ) -> tuple[list[str], dict]:
+		"""
+		Disobind supoorts two ways to specify the input:
+			csv (preferred)
+				Provide the inputs in a csv format (see read_csv).
+				Alows providing multiple jobs for prediction.
+				Limited to proteins for which a UniProt entry exists.
+			fasta
+				Provide input pair in a FASTA file (see read_fasta).
+				Allows running only one prediction at a time.
+				Can provide proteins for which no UniProt accession exists.
+		"""
+		if self.input_type == "csv":
+			if "csv" not in self.input_file:
+				raise ValueError( "csv file must be provided for csv input_type..." )
+			entry_ids, af_dict = self.read_csv_input()
+		elif self.input_type == "fasta":
+			if "fasta" not in self.input_file:
+				raise ValueError( "fasta file must be provided for fasta input_type..." )
+			entry_ids, af_dict = self.read_fasta_input()
+		else:
+			raise ValueError(
+				f"Unsupported input_type: {self.input_type}. PUse csv/fasta..."
+			)
+
+		return entry_ids, af_dict
+
+
+	def read_fasta_input( self ) -> tuple[list[str], dict]:
+		"""
+		We support providing custom sequences (not available on UniProt) in a FASTA file.
+		Each FASTA file must contain the sequence of the IDR (prot1) and its partner (prot2).
+		Supported format:
+			>prot1,start1,end1,model_file_path,pkl_file_path,chain1,offset1
+			sequence
+			>prot2,start2,end2,model_file_path,pkl_file_path,chain2,offset2
+			sequence
+		model_file_path,pkl_file_path must contain the prediction for the complex
+			not individual chains.
+		Further, we create the uniprot_dict using the provided sequences.
+			We assume that the provided sequences correspond to the full protein sequence.
+
+		Input:
+		----------
+		Does not take any arguments.
+
+		Returns:
+		----------
+		entry_ids --> list of entry_ids for all binary complexes.
+		"""
+		input_dict = {}
+		records = list(SeqIO.parse( self.input_file, "fasta" ) )
+		if len( records ) != 2:
+			raise ValueError(
+				f"Expected exactly 2 FASTA entries, found {len( records )}..."
+			)
+		def split_header( header: str ):
+			header_split = header.split( "," )
+			if len( header_split ) == 3:
+				prot, start, end = header_split
+				af_struct_file, af_json_file, chain, offset = None, None, None, None
+			elif len( header_split ) == 7:
+				prot, start, end, af_struct_file, af_json_file, chain, offset = header_split
+			else:
+				raise ValueError( f"Incorrect input header format..." )
+			return prot, start, end, af_struct_file, af_json_file, chain, offset
+
+		prot1, start1, end1, af_struct_file, af_json_file, chain1, offset1 = split_header(
+			records[0].id 
+		)
+		seq1 = str( records[0].seq )
+		prot2, start2, end2, af_struct_file, af_json_file, chain2, offset2 = split_header(
+			records[1].id 
+		)
+		seq2 = str( records[1].seq )
+
+		# Create the uniprot_dict using the provided sequences.
+		uniprot_seq = {}
+		uniprot_seq[prot1] = seq1
+		uniprot_seq[prot2] = seq2
+		# Save on disk.
+		with open( self.uni_seq_file, "w" ) as w:
+			json.dump( uniprot_seq, w )
+
+		entry_id = f"{prot1}:{start1}:{end1}--{prot2}:{start2}:{end2}_0"
+		af_dict = {
+			entry_id: {
+					"struct_file": af_struct_file,
+					"json_file": af_json_file,
+					"required_chains": {
+									"chains": [chain1, chain2],
+									"offsets": [offset1, offset2]
+										}
+				}
+		}
+
+		return [entry_id], af_dict
+
+
+
+	def read_csv_input( self ) -> tuple[list[str], dict]:
 		"""
 		Read from a csv file containing prot1 and prot2 info as:
 			Uni_ID1,start1,end1,Uni_ID2,start2,end2
@@ -218,7 +322,7 @@ class Disobind():
 
 		Returns:
 		----------
-		entry_ids --> list of entry_ids for al binary complexes.
+		entry_ids --> list of entry_ids for all binary complexes.
 		"""
 		entry_ids = []
 		af_dict = {}
@@ -254,11 +358,10 @@ class Disobind():
 
 		return entry_ids, af_dict
 
-
 ###################################################################################
 ##-------------------------------------------------------------------------------##
 ###################################################################################
-	def parallelize_uni_seq_download( self, uni_id ):
+	def parallelize_uni_seq_download( self, uni_id: str ) -> tuple[str, str]:
 		"""
 		Obtain all unique UniProt IDs in the provided input.
 		Download all unique UniProt sequences.
@@ -277,7 +380,7 @@ class Disobind():
 		return uni_id, seq
 
 
-	def get_unique_uni_ids( self, entry_ids ):
+	def get_unique_uni_ids( self, entry_ids: list[str] ) -> list[str]:
 		"""
 		Given a list of all protein pairs, get all the unique Uniprot IDs.
 		"""
@@ -326,11 +429,31 @@ class Disobind():
 		print( "Unique Uniprot IDs = ", len( unique_uni_ids ) )
 		print( "Total Uniprot sequences obtained = ", len( self.uniprot_seq ) )
 
-
 ###################################################################################
 ##-------------------------------------------------------------------------------##
 ###################################################################################
-	def process_input_pairs( self, entry_ids ):
+	def check_seq_length(
+		self,
+		seq: str,
+		start_res: int,
+		end_res: int
+	):
+		"""
+		Raise an error if the sequence length is lesser than the
+			provided residue positions.
+		"""
+		seq_length = len( seq )
+		num_res = end_res - start_res + 1
+
+		if seq_length < num_res:
+			raise ValueError(
+		f"Sequence length ({seq_length} residues) is shorter than the "
+		f"specified residue range {start_res}-{end_res}, which contains "
+		f"{num_res} residues."
+			)
+
+
+	def process_input_pairs( self, entry_ids: list[str] ) -> list[str]:
 		"""
 		For all input pairs, convert them into a uniform format:
 			UniID1:start1:end1--UniID2:start2:end2_num
@@ -341,7 +464,8 @@ class Disobind():
 
 		Returns:
 		----------
-		processed_pairs --> list of protein 1/2 fragment pairs to obtain Disobind predictions for.
+		prot_pairs --> list of protein 1/2 fragment pairs to
+			obtain Disobind predictions for.
 		"""
 		print( "\nDownloading UniProt sequences..." )
 		if not os.path.exists( self.uni_seq_file ):
@@ -356,23 +480,34 @@ class Disobind():
 		prot_pairs = []
 		for head in entry_ids:
 			head1, head2 = head.split( "--" )
+			head2 = head2.split( "_" )[0]
+
 			uni_id1, start1, end1 = head1.split( ":" )
 			uni_id2, start2, end2 = head2.split( ":" )
 
+			# Sanity check the protein lengths.
+			self.check_seq_length(
+				seq = self.uniprot_seq[uni_id1],
+				start_res = int( start1 ),
+				end_res = int( end1 )
+			)
+			self.check_seq_length(
+				seq = self.uniprot_seq[uni_id2],
+				start_res = int( start2 ),
+				end_res = int( end2 )
+			)
+
 			if uni_id1 not in self.uniprot_seq.keys() or uni_id2 not in self.uniprot_seq.keys():
 				print( f"Skipping the input pair -- {head}" )		
-
 			else:
 				prot_pairs.append( head )
 		
 		return prot_pairs
 
-
-
 ###################################################################################
 ##-------------------------------------------------------------------------------##
 ###################################################################################
-	def create_embeddings( self, entry_ids ):
+	def create_embeddings( self, entry_ids: list[str] ):
 		"""
 		Use the Shredder() class to:
 			Create fasta files and get embeddings.
@@ -1178,6 +1313,11 @@ if __name__ == "__main__":
 	tic = time.time()
 	parser = argparse.ArgumentParser( description = "Script to obtain Disobind predictions for the specified protein pairs.")
 
+	parser.add_argument( 
+						"--input_type", "-i", dest = "i", 
+						help = "Input file type. Supported - csv/ fasta.", 
+						required = True )
+	
 	parser.add_argument( 
 						"--input", "-f", dest = "f", 
 						help = "Provide protein pairs as -- Uni_ID1,start_res1,end_res1,Uni_ID2,start_res2,end_res2 -- in a csv file format.", 
